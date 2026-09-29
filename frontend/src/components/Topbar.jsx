@@ -3,8 +3,6 @@ import {
   MenuOutlined,
   WifiTetheringOutlined,
   NotificationsNoneOutlined,
-  PersonOutlined,
-  LockOutlined,
 } from "@mui/icons-material";
 
 export default function Topbar({ onToggleSidebar, isMobile }) {

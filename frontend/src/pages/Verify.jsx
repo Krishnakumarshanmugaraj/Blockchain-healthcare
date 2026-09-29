@@ -3,21 +3,16 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../api/api";
 import {
   VerifiedUserOutlined,
-  SearchOutlined,
   CloudUploadOutlined,
   CheckCircleOutlined,
   ErrorOutlined,
-  ShieldOutlined,
   LockOutlined,
-  InsertDriveFileOutlined,
-  RefreshOutlined,
-  ContentCopyOutlined,
 } from "@mui/icons-material";
 
 export default function Verify() {
   const [records, setRecords] = useState([]);
   const [patients, setPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   // Verification mode: 'hash' or 'file'
   const [verifyMode, setVerifyMode] = useState("hash");
@@ -46,7 +41,11 @@ export default function Verify() {
   }, []);
 
   useEffect(() => {
-    fetchLedgerData();
+    const timer = setTimeout(() => {
+      void fetchLedgerData();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [fetchLedgerData]);
 
   const patientMap = patients.reduce((acc, p) => ({ ...acc, [p.id]: p }), {});

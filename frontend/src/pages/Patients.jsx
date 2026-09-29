@@ -4,16 +4,10 @@ import api from "../api/api";
 import {
   SearchOutlined,
   AddOutlined,
-  FilterListOutlined,
   EditOutlined,
   DeleteOutlined,
   VisibilityOutlined,
   CloseOutlined,
-  PersonOutlined,
-  PhoneOutlined,
-  HomeOutlined,
-  ContactPhoneOutlined,
-  BadgeOutlined,
 } from "@mui/icons-material";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-","A1+"];
@@ -68,7 +62,11 @@ export default function Patients() {
   }, []);
 
   useEffect(() => {
-    fetchPatients();
+    const timer = setTimeout(() => {
+      void fetchPatients();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [fetchPatients]);
 
   const handleOpenAddModal = () => {

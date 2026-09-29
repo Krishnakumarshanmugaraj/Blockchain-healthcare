@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, Component } from "react";
+import { useState, useEffect, useCallback, Component } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 
@@ -79,7 +79,9 @@ export default function DashboardLayout({ children }) {
         const next = !prev;
         try {
           localStorage.setItem(STORAGE_KEY, String(next));
-        } catch {}
+        } catch (error) {
+          console.warn("Unable to save sidebar preference:", error);
+        }
         return next;
       });
     }

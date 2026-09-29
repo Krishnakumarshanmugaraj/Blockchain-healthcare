@@ -1,278 +1,329 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  DashboardOutlined,
-  PeopleAltOutlined,
-  DescriptionOutlined,
+  AccountBalanceWalletOutlined,
   CloudUploadOutlined,
-  VerifiedUserOutlined,
+  DashboardOutlined,
+  DescriptionOutlined,
+  HealthAndSafetyOutlined,
+  PeopleOutlined,
+  PsychologyOutlined,
+  VerifiedOutlined,
+  WorkspacePremiumOutlined,
   LogoutOutlined,
-  ShieldOutlined,
-  ChevronLeftOutlined,
-  ChevronRightOutlined,
-  AccountCircleOutlined,
 } from "@mui/icons-material";
+import {
+  Box,
+  Divider,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+} from "@mui/material";
+import { useLocation, useNavigate } from "react-router-dom";
 
-const NAVIGATION_ITEMS = [
-  { path: "/dashboard", label: "Dashboard", icon: DashboardOutlined },
-  { path: "/patients", label: "Patients", icon: PeopleAltOutlined },
-  { path: "/records", label: "Medical Records", icon: DescriptionOutlined },
-  { path: "/upload", label: "Upload Record", icon: CloudUploadOutlined },
-  { path: "/verify", label: "Verify Integrity", icon: VerifiedUserOutlined },
+const menuItems = [
+  {
+    label: "Dashboard",
+    path: "/dashboard",
+    icon: <DashboardOutlined />,
+  },
+  {
+    label: "Patients",
+    path: "/patients",
+    icon: <PeopleOutlined />,
+  },
+  {
+    label: "Medical Records",
+    path: "/records",
+    icon: <DescriptionOutlined />,
+  },
+  {
+    label: "Upload Record",
+    path: "/upload",
+    icon: <CloudUploadOutlined />,
+  },
+  {
+    label: "Verify Integrity",
+    path: "/verify",
+    icon: <VerifiedOutlined />,
+  },
+  {
+    label: "Recovery Prediction",
+    path: "/recovery-prediction",
+    icon: <PsychologyOutlined />,
+  },
+  {
+    label: "ZKP",
+    path: "/zkp",
+    icon: <HealthAndSafetyOutlined />,
+  },
+  {
+    label: "Proof of Cure",
+    path: "/proof-of-cure",
+    icon: <WorkspacePremiumOutlined />,
+  },
+  {
+    label: "Insurance Settlement",
+    path: "/insurance-settlement",
+    icon: <AccountBalanceWalletOutlined />,
+  },
 ];
 
-export default function Sidebar({ collapsed, onToggleCollapse, onNavigate }) {
-  const location = useLocation();
+export default function Sidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user_email");
     localStorage.removeItem("user_role");
-    navigate("/");
+
+    navigate("/", {
+      replace: true,
+    });
   };
 
-  const userEmail = localStorage.getItem("user_email") || "admin@healthchain.org";
-  const userRole = localStorage.getItem("user_role") || "Administrator";
-
   return (
-    <div
-      style={{
-        width: collapsed ? "76px" : "260px",
-        height: "100vh",
-        background: "linear-gradient(180deg, #0f172a 0%, #1e293b 100%)",
-        color: "#f8fafc",
+    <Box
+      sx={{
+        width: 280,
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
-        transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-        boxShadow: "4px 0 24px rgba(0, 0, 0, 0.15)",
-        position: "relative",
-        zIndex: 100,
-        userSelect: "none",
+        background:
+          "linear-gradient(180deg, #0f172a 0%, #111c31 100%)",
+        color: "#ffffff",
+        borderRight:
+          "1px solid rgba(148, 163, 184, 0.12)",
       }}
     >
-      {/* Brand Header */}
-      <div>
-        <div
-          style={{
-            height: "72px",
-            display: "flex",
-            alignItems: "center",
-            padding: collapsed ? "0 16px" : "0 22px",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-            justifyContent: collapsed ? "center" : "space-between",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div
-              style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "10px",
-                background: "linear-gradient(135deg, #0d9488 0%, #0284c7 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 0 12px rgba(13, 148, 136, 0.4)",
-                flexShrink: 0,
-              }}
-            >
-              <ShieldOutlined style={{ fontSize: "24px", color: "#ffffff" }} />
-            </div>
-            {!collapsed && (
-              <div>
-                <h1
-                  style={{
-                    fontSize: "17px",
-                    fontWeight: "800",
-                    letterSpacing: "-0.3px",
-                    margin: 0,
-                    background: "linear-gradient(90deg, #ffffff 0%, #cbd5e1 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  HealthChain
-                </h1>
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: "600",
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                    color: "#0d9488",
-                  }}
-                >
-                  Blockchain EHR
-                </span>
-              </div>
-            )}
-          </div>
-
-          {onToggleCollapse && !collapsed && (
-            <button
-              onClick={onToggleCollapse}
-              style={{
-                background: "rgba(255, 255, 255, 0.06)",
-                border: "none",
-                color: "#94a3b8",
-                width: "28px",
-                height: "28px",
-                borderRadius: "6px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "all 0.15s",
-              }}
-              title="Collapse Sidebar"
-            >
-              <ChevronLeftOutlined style={{ fontSize: "18px" }} />
-            </button>
-          )}
-        </div>
-
-        {/* Navigation Menu */}
-        <nav style={{ padding: "16px 12px", display: "flex", flexDirection: "column", gap: "6px" }}>
-          {NAVIGATION_ITEMS.map((item) => {
-            const isActive = location.pathname === item.path;
-            const Icon = item.icon;
-
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={onNavigate}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "14px",
-                  padding: collapsed ? "12px 0" : "12px 16px",
-                  justifyContent: collapsed ? "center" : "flex-start",
-                  borderRadius: "10px",
-                  textDecoration: "none",
-                  fontSize: "14px",
-                  fontWeight: isActive ? "700" : "500",
-                  color: isActive ? "#ffffff" : "#94a3b8",
-                  background: isActive
-                    ? "linear-gradient(90deg, rgba(13, 148, 136, 0.25) 0%, rgba(2, 132, 199, 0.1) 100%)"
-                    : "transparent",
-                  borderLeft: isActive ? "3px solid #0d9488" : "3px solid transparent",
-                  boxShadow: isActive ? "0 4px 12px rgba(13, 148, 136, 0.15)" : "none",
-                  transition: "all 0.18s ease",
-                }}
-                title={collapsed ? item.label : undefined}
-              >
-                <Icon
-                  style={{
-                    fontSize: "22px",
-                    color: isActive ? "#0d9488" : "#94a3b8",
-                    transition: "color 0.18s",
-                  }}
-                />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Footer Profile & Logout */}
-      <div
-        style={{
-          padding: "16px 12px",
-          borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+      {/* Brand */}
+      <Box
+        sx={{
+          px: 2.5,
+          py: 2.5,
           display: "flex",
-          flexDirection: "column",
-          gap: "10px",
+          alignItems: "center",
+          gap: 1.5,
         }}
       >
-        {!collapsed && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "8px 10px",
-              borderRadius: "8px",
-              background: "rgba(255, 255, 255, 0.04)",
-            }}
-          >
-            <AccountCircleOutlined style={{ fontSize: "32px", color: "#0ea5e9" }} />
-            <div style={{ overflow: "hidden" }}>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  color: "#f8fafc",
-                  margin: 0,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {userEmail.split("@")[0]}
-              </p>
-              <span
-                style={{
-                  fontSize: "11px",
-                  color: "#0d9488",
-                  fontWeight: "600",
-                  textTransform: "capitalize",
-                }}
-              >
-                {userRole}
-              </span>
-            </div>
-          </div>
-        )}
-
-        <button
-          onClick={handleLogout}
-          style={{
-            width: "100%",
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            borderRadius: 2,
             display: "flex",
             alignItems: "center",
-            gap: "12px",
-            justifyContent: collapsed ? "center" : "flex-start",
-            padding: "10px 14px",
-            borderRadius: "8px",
-            border: "1px solid rgba(244, 63, 94, 0.2)",
-            background: "rgba(244, 63, 94, 0.06)",
-            color: "#f43f5e",
-            fontSize: "13px",
-            fontWeight: "600",
-            cursor: "pointer",
-            transition: "all 0.15s ease",
+            justifyContent: "center",
+            background:
+              "linear-gradient(135deg, #0d9488 0%, #0284c7 100%)",
+            boxShadow:
+              "0 0 22px rgba(14, 165, 233, 0.25)",
           }}
-          title="Sign Out"
         >
-          <LogoutOutlined style={{ fontSize: "18px" }} />
-          {!collapsed && <span>Logout Session</span>}
-        </button>
-
-        {onToggleCollapse && collapsed && (
-          <button
-            onClick={onToggleCollapse}
-            style={{
-              background: "rgba(255, 255, 255, 0.06)",
-              border: "none",
-              color: "#94a3b8",
-              height: "32px",
-              borderRadius: "6px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.15s",
-              marginTop: "4px",
+          <HealthAndSafetyOutlined
+            sx={{
+              color: "#ffffff",
+              fontSize: 30,
             }}
-            title="Expand Sidebar"
+          />
+        </Box>
+
+        <Box>
+          <Typography
+            sx={{
+              fontSize: 18,
+              fontWeight: 800,
+              lineHeight: 1.1,
+            }}
           >
-            <ChevronRightOutlined style={{ fontSize: "18px" }} />
-          </button>
-        )}
-      </div>
-    </div>
+            HealthChain
+          </Typography>
+
+          <Typography
+            sx={{
+              mt: 0.4,
+              fontSize: 10,
+              letterSpacing: 1.4,
+              fontWeight: 700,
+              color: "#14b8a6",
+            }}
+          >
+            BLOCKCHAIN EHR
+          </Typography>
+        </Box>
+      </Box>
+
+      <Divider
+        sx={{
+          borderColor:
+            "rgba(148, 163, 184, 0.12)",
+        }}
+      />
+
+      {/* Navigation */}
+      <List
+        sx={{
+          px: 1.5,
+          py: 2,
+          flex: 1,
+        }}
+      >
+        {menuItems.map((item) => {
+          const selected =
+            location.pathname === item.path;
+
+          return (
+            <ListItemButton
+              key={item.path}
+              selected={selected}
+              onClick={() =>
+                navigate(item.path)
+              }
+              sx={{
+                minHeight: 48,
+                mb: 0.6,
+                px: 1.5,
+                borderRadius: 2,
+                color: selected
+                  ? "#ffffff"
+                  : "#94a3b8",
+                borderLeft: selected
+                  ? "3px solid #14b8a6"
+                  : "3px solid transparent",
+                backgroundColor: selected
+                  ? "rgba(14, 165, 233, 0.14)"
+                  : "transparent",
+                "&:hover": {
+                  backgroundColor:
+                    "rgba(14, 165, 233, 0.10)",
+                  color: "#ffffff",
+                },
+                "&.Mui-selected": {
+                  backgroundColor:
+                    "rgba(14, 165, 233, 0.14)",
+                },
+                "&.Mui-selected:hover": {
+                  backgroundColor:
+                    "rgba(14, 165, 233, 0.18)",
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 40,
+                  color: "inherit",
+                }}
+              >
+                {item.icon}
+              </ListItemIcon>
+
+              <ListItemText
+                primary={item.label}
+                primaryTypographyProps={{
+                  fontSize: 14,
+                  fontWeight: selected
+                    ? 700
+                    : 600,
+                }}
+              />
+            </ListItemButton>
+          );
+        })}
+      </List>
+
+      <Divider
+        sx={{
+          borderColor:
+            "rgba(148, 163, 184, 0.12)",
+        }}
+      />
+
+      {/* Current User */}
+      <Box
+        sx={{
+          mx: 1.5,
+          mt: 1.5,
+          p: 1.5,
+          borderRadius: 2,
+          background:
+            "rgba(148, 163, 184, 0.08)",
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: 12,
+            color: "#94a3b8",
+            mb: 0.5,
+          }}
+        >
+          Signed in as
+        </Typography>
+
+        <Typography
+          sx={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: "#f8fafc",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {localStorage.getItem(
+            "user_email"
+          ) || "Healthcare User"}
+        </Typography>
+
+        <Typography
+          sx={{
+            mt: 0.4,
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#14b8a6",
+            textTransform: "uppercase",
+          }}
+        >
+          {localStorage.getItem(
+            "user_role"
+          ) || "User"}
+        </Typography>
+      </Box>
+
+      {/* Logout */}
+      <Box sx={{ p: 1.5 }}>
+        <ListItemButton
+          onClick={handleLogout}
+          sx={{
+            minHeight: 46,
+            borderRadius: 2,
+            color: "#f87171",
+            border:
+              "1px solid rgba(248, 113, 113, 0.25)",
+            "&:hover": {
+              background:
+                "rgba(248, 113, 113, 0.10)",
+            },
+          }}
+        >
+          <ListItemIcon
+            sx={{
+              minWidth: 40,
+              color: "inherit",
+            }}
+          >
+            <LogoutOutlined />
+          </ListItemIcon>
+
+          <ListItemText
+            primary="Logout Session"
+            primaryTypographyProps={{
+              fontSize: 14,
+              fontWeight: 700,
+            }}
+          />
+        </ListItemButton>
+      </Box>
+    </Box>
   );
 }

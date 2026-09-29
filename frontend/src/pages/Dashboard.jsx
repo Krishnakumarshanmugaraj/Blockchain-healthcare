@@ -43,7 +43,11 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetchDashboardData();
+    const timer = setTimeout(() => {
+      void fetchDashboardData();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [fetchDashboardData]);
 
   const handleRefresh = async () => {

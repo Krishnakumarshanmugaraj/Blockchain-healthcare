@@ -5,9 +5,6 @@ import {
   CloudUploadOutlined,
   InsertDriveFileOutlined,
   CheckCircleOutlined,
-  LockOutlined,
-  VerifiedUserOutlined,
-  RefreshOutlined,
   ArrowForwardOutlined,
 } from "@mui/icons-material";
 
@@ -42,7 +39,11 @@ export default function Upload() {
   }, []);
 
   useEffect(() => {
-    fetchRecords();
+    const timer = setTimeout(() => {
+      void fetchRecords();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [fetchRecords]);
 
   // Compute SHA-256 using Browser WebCrypto API

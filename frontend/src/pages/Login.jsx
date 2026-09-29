@@ -1,564 +1,559 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../api/api";
+import { useState } from "react";
 import {
-  ShieldOutlined,
-  LockOutlined,
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
+} from "@mui/material";
+import {
+  ArrowForward,
   EmailOutlined,
-  PersonOutlined,
-  BadgeOutlined,
-  VisibilityOutlined,
-  VisibilityOffOutlined,
-  ArrowForwardOutlined,
+  LockOutlined,
+  ShieldOutlined,
+  Visibility,
+  VisibilityOff,
 } from "@mui/icons-material";
+import api from "../api/api";
 
 export default function Login() {
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [mode, setMode] = useState("login");
 
-  // Form Fields
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(
+    "fabrictestdoctor@example.com"
+  );
+
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState("Doctor");
-  const [showPassword, setShowPassword] = useState(false);
 
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const [fullName, setFullName] = useState("");
+
+  const [role, setRole] = useState("doctor");
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
   const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
+  const [error, setError] = useState("");
 
-  // If token exists, auto-redirect
-  useEffect(() => {
-    const existingToken = localStorage.getItem("token");
-    if (existingToken) {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [navigate]);
+  const [success, setSuccess] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleModeChange = (_, newMode) => {
+    setMode(newMode);
     setError("");
-    setSuccessMsg("");
+    setSuccess("");
+  };
 
-    if (!email.trim() || !password) {
-      setError("Please fill in both email and password.");
+  const handleLogin = async (event) => {
+    event.preventDefault();
+
+    setError("");
+    setSuccess("");
+
+    const normalizedEmail = email
+      .trim()
+      .toLowerCase();
+
+    if (!normalizedEmail) {
+      setError("Please enter your email address.");
+      return;
+    }
+
+    if (!password) {
+      setError("Please enter your password.");
       return;
     }
 
     setLoading(true);
+
     try {
-      const response = await api.post("/auth/login", {
-        email: email.trim(),
-        password: password,
-      });
+      const response = await api.post(
+        "/auth/login",
+        {
+          email: normalizedEmail,
+          password,
+        }
+      );
 
       const data = response.data;
-      const token = data?.access_token || data?.token;
 
-      if (token) {
-        localStorage.setItem("token", token);
-        localStorage.setItem("user_email", email.trim());
-        localStorage.setItem("user_role", role || "Doctor");
-        navigate("/dashboard", { replace: true });
-      } else {
-        throw new Error("Invalid response token from server.");
+      if (!data?.access_token) {
+        throw new Error(
+          "Login succeeded but no access token was returned."
+        );
       }
+
+      localStorage.setItem(
+        "token",
+        data.access_token
+      );
+
+      localStorage.setItem(
+        "user_email",
+        normalizedEmail
+      );
+
+      localStorage.setItem(
+        "user_role",
+        data.role || "user"
+      );
+
+      setPassword("");
+
+      window.location.href = "/dashboard";
     } catch (err) {
-      console.error("Login Error:", err);
-      const detail = err?.response?.data?.detail || err?.response?.data?.message;
-      setError(detail || "Invalid email or password. Please try again.");
+      console.error("Login error:", err);
+
+      if (err?.response?.status === 401) {
+        setError(
+          "Invalid email or password. Please try again."
+        );
+      } else if (err?.response?.data?.detail) {
+        setError(
+          String(err.response.data.detail)
+        );
+      } else if (err?.request) {
+        setError(
+          "Unable to connect to the backend. Please make sure the FastAPI server is running on port 8000."
+        );
+      } else {
+        setError(
+          "Login failed. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccessMsg("");
+  const handleRegister = async (event) => {
+    event.preventDefault();
 
-    if (!fullName.trim() || !email.trim() || !password) {
-      setError("Please complete all registration fields.");
+    setError("");
+    setSuccess("");
+
+    const normalizedEmail = email
+      .trim()
+      .toLowerCase();
+
+    if (!fullName.trim()) {
+      setError("Please enter your full name.");
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+    if (!normalizedEmail) {
+      setError("Please enter your email address.");
+      return;
+    }
+
+    if (!password) {
+      setError("Please enter a password.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError(
+        "Password must contain at least 8 characters."
+      );
       return;
     }
 
     setLoading(true);
+
     try {
-      const response = await api.post("/auth/register", {
+      await api.post("/auth/register", {
         full_name: fullName.trim(),
-        email: email.trim(),
-        password: password,
-        role: role,
+        email: normalizedEmail,
+        password,
+        role,
       });
 
-      if (response.data) {
-        setSuccessMsg("Account registered successfully! You can now log in.");
-        setIsRegisterMode(false);
-        setPassword("");
-      }
+      setSuccess(
+        "Account created successfully. You can now sign in."
+      );
+
+      setMode("login");
+      setPassword("");
+      setFullName("");
     } catch (err) {
-      console.error("Registration Error:", err);
-      const detail = err?.response?.data?.detail || err?.response?.data?.message;
-      setError(detail || "Failed to register. Email may already be in use.");
+      console.error(
+        "Registration error:",
+        err
+      );
+
+      if (err?.response?.data?.detail) {
+        setError(
+          String(err.response.data.detail)
+        );
+      } else if (err?.request) {
+        setError(
+          "Unable to connect to the backend. Please make sure the FastAPI server is running on port 8000."
+        );
+      } else {
+        setError(
+          "Registration failed. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSubmit =
+    mode === "login"
+      ? handleLogin
+      : handleRegister;
+
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         minHeight: "100vh",
-        width: "100vw",
-        background: "radial-gradient(circle at 50% 20%, #1e293b 0%, #0f172a 100%)",
         display: "flex",
-        alignItems: "center",
         justifyContent: "center",
-        padding: "24px",
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        position: "relative",
-        overflow: "hidden",
+        alignItems: "center",
+        px: 2,
+        py: 4,
+        background:
+          "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
       }}
     >
-      {/* Background Decorative Glow Circles */}
-      <div
-        style={{
-          position: "absolute",
-          top: "10%",
-          left: "15%",
-          width: "400px",
-          height: "400px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(13, 148, 136, 0.15) 0%, transparent 70%)",
-          filter: "blur(40px)",
-          pointerEvents: "none",
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: 520,
+          borderRadius: 4,
+          border:
+            "1px solid rgba(148, 163, 184, 0.25)",
+          background:
+            "rgba(30, 41, 59, 0.92)",
+          boxShadow:
+            "0 25px 70px rgba(0, 0, 0, 0.35)",
+          overflow: "hidden",
         }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: "10%",
-          right: "15%",
-          width: "450px",
-          height: "450px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(2, 132, 199, 0.15) 0%, transparent 70%)",
-          filter: "blur(40px)",
-          pointerEvents: "none",
-        }}
-      />
-
-      <div
-        style={{
-          width: "440px",
-          maxWidth: "100%",
-          background: "rgba(30, 41, 59, 0.75)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          border: "1px solid rgba(255, 255, 255, 0.12)",
-          borderRadius: "20px",
-          padding: "40px 36px",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
-          color: "#f8fafc",
-          position: "relative",
-          zIndex: 10,
-        }}
-        className="scale-in"
       >
-        {/* Brand Shield Logo */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            marginBottom: "28px",
+        <Box
+          sx={{
+            px: { xs: 3, sm: 5 },
+            pt: 5,
+            pb: 4,
           }}
         >
-          <div
-            style={{
-              width: "56px",
-              height: "56px",
-              borderRadius: "16px",
-              background: "linear-gradient(135deg, #0d9488 0%, #0284c7 100%)",
+          {/* Logo */}
+          <Box
+            sx={{
               display: "flex",
-              alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 0 24px rgba(13, 148, 136, 0.5)",
-              marginBottom: "14px",
+              mb: 3,
             }}
           >
-            <ShieldOutlined style={{ fontSize: "32px", color: "#ffffff" }} />
-          </div>
-          <h1
-            style={{
-              fontSize: "22px",
-              fontWeight: "800",
-              margin: 0,
-              letterSpacing: "-0.5px",
+            <Box
+              sx={{
+                width: 70,
+                height: 70,
+                borderRadius: 3,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background:
+                  "linear-gradient(135deg, #0d9488 0%, #0284c7 100%)",
+                boxShadow:
+                  "0 0 30px rgba(14, 165, 233, 0.35)",
+              }}
+            >
+              <ShieldOutlined
+                sx={{
+                  color: "#ffffff",
+                  fontSize: 42,
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Title */}
+          <Typography
+            variant="h4"
+            sx={{
               textAlign: "center",
+              fontWeight: 800,
+              color: "#f8fafc",
             }}
           >
             HealthChain Platform
-          </h1>
-          <p
-            style={{
-              fontSize: "13px",
-              color: "#94a3b8",
-              margin: "4px 0 0 0",
+          </Typography>
+
+          <Typography
+            sx={{
               textAlign: "center",
+              color: "#94a3b8",
+              mt: 1,
+              mb: 4,
             }}
           >
             Blockchain-Secured Healthcare Records Access
-          </p>
-        </div>
+          </Typography>
 
-        {/* Tab Selector */}
-        <div
-          style={{
-            display: "flex",
-            background: "rgba(15, 23, 42, 0.6)",
-            padding: "4px",
-            borderRadius: "12px",
-            marginBottom: "24px",
-            border: "1px solid rgba(255, 255, 255, 0.05)",
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => {
-              setIsRegisterMode(false);
-              setError("");
-              setSuccessMsg("");
-            }}
-            style={{
-              flex: 1,
-              padding: "9px 0",
-              borderRadius: "8px",
-              border: "none",
-              background: !isRegisterMode
-                ? "linear-gradient(135deg, #0d9488 0%, #0284c7 100%)"
-                : "transparent",
-              color: !isRegisterMode ? "#ffffff" : "#94a3b8",
-              fontWeight: "700",
-              fontSize: "13px",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
+          {/* Tabs */}
+          <Tabs
+            value={mode}
+            onChange={handleModeChange}
+            variant="fullWidth"
+            sx={{
+              mb: 3,
+              background:
+                "rgba(15, 23, 42, 0.65)",
+              borderRadius: 2,
+              minHeight: 48,
+              "& .MuiTabs-indicator": {
+                height: "100%",
+                borderRadius: 2,
+                zIndex: 0,
+                background:
+                  "linear-gradient(135deg, #0d9488 0%, #0284c7 100%)",
+              },
+              "& .MuiTab-root": {
+                zIndex: 1,
+                color: "#94a3b8",
+                fontWeight: 700,
+                textTransform: "none",
+                minHeight: 48,
+              },
+              "& .Mui-selected": {
+                color: "#ffffff !important",
+              },
             }}
           >
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setIsRegisterMode(true);
-              setError("");
-              setSuccessMsg("");
-            }}
-            style={{
-              flex: 1,
-              padding: "9px 0",
-              borderRadius: "8px",
-              border: "none",
-              background: isRegisterMode
-                ? "linear-gradient(135deg, #0d9488 0%, #0284c7 100%)"
-                : "transparent",
-              color: isRegisterMode ? "#ffffff" : "#94a3b8",
-              fontWeight: "700",
-              fontSize: "13px",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-            }}
-          >
-            Create Account
-          </button>
-        </div>
+            <Tab
+              value="login"
+              label="Sign In"
+            />
 
-        {/* Alerts */}
-        {error && (
-          <div
-            style={{
-              background: "rgba(244, 63, 94, 0.15)",
-              border: "1px solid rgba(244, 63, 94, 0.3)",
-              color: "#fb7185",
-              borderRadius: "10px",
-              padding: "10px 14px",
-              fontSize: "13px",
-              marginBottom: "20px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <span>⚠️ {error}</span>
-          </div>
-        )}
+            <Tab
+              value="register"
+              label="Create Account"
+            />
+          </Tabs>
 
-        {successMsg && (
-          <div
-            style={{
-              background: "rgba(16, 185, 129, 0.15)",
-              border: "1px solid rgba(16, 185, 129, 0.3)",
-              color: "#34d399",
-              borderRadius: "10px",
-              padding: "10px 14px",
-              fontSize: "13px",
-              marginBottom: "20px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <span>✅ {successMsg}</span>
-          </div>
-        )}
-
-        {/* Form Container */}
-        <form onSubmit={isRegisterMode ? handleRegister : handleLogin}>
-          {isRegisterMode && (
-            <div style={{ marginBottom: "16px" }}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  color: "#cbd5e1",
-                  marginBottom: "6px",
-                }}
-              >
-                Full Name
-              </label>
-              <div style={{ position: "relative" }}>
-                <PersonOutlined
-                  style={{
-                    position: "absolute",
-                    left: "14px",
-                    top: "12px",
-                    color: "#64748b",
-                    fontSize: "20px",
-                  }}
-                />
-                <input
-                  type="text"
-                  placeholder="Dr. John Smith"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "12px 14px 12px 42px",
-                    background: "rgba(15, 23, 42, 0.7)",
-                    border: "1px solid rgba(255, 255, 255, 0.15)",
-                    borderRadius: "10px",
-                    color: "#ffffff",
-                    fontSize: "14px",
-                    outline: "none",
-                  }}
-                />
-              </div>
-            </div>
+          {/* Messages */}
+          {error && (
+            <Alert
+              severity="error"
+              sx={{
+                mb: 2.5,
+                borderRadius: 2,
+              }}
+              onClose={() => setError("")}
+            >
+              {error}
+            </Alert>
           )}
 
-          {/* Email Field */}
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: "12px",
-                fontWeight: "600",
-                color: "#cbd5e1",
-                marginBottom: "6px",
+          {success && (
+            <Alert
+              severity="success"
+              sx={{
+                mb: 2.5,
+                borderRadius: 2,
               }}
+              onClose={() => setSuccess("")}
             >
-              Email Address
-            </label>
-            <div style={{ position: "relative" }}>
-              <EmailOutlined
-                style={{
-                  position: "absolute",
-                  left: "14px",
-                  top: "12px",
-                  color: "#64748b",
-                  fontSize: "20px",
-                }}
-              />
-              <input
-                type="email"
-                placeholder="doctor@hospital.org"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "12px 14px 12px 42px",
-                  background: "rgba(15, 23, 42, 0.7)",
-                  border: "1px solid rgba(255, 255, 255, 0.15)",
-                  borderRadius: "10px",
-                  color: "#ffffff",
-                  fontSize: "14px",
-                  outline: "none",
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Password Field */}
-          <div style={{ marginBottom: isRegisterMode ? "16px" : "22px" }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: "12px",
-                fontWeight: "600",
-                color: "#cbd5e1",
-                marginBottom: "6px",
-              }}
-            >
-              Password
-            </label>
-            <div style={{ position: "relative" }}>
-              <LockOutlined
-                style={{
-                  position: "absolute",
-                  left: "14px",
-                  top: "12px",
-                  color: "#64748b",
-                  fontSize: "20px",
-                }}
-              />
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "12px 42px 12px 42px",
-                  background: "rgba(15, 23, 42, 0.7)",
-                  border: "1px solid rgba(255, 255, 255, 0.15)",
-                  borderRadius: "10px",
-                  color: "#ffffff",
-                  fontSize: "14px",
-                  outline: "none",
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                style={{
-                  position: "absolute",
-                  right: "12px",
-                  top: "12px",
-                  background: "none",
-                  border: "none",
-                  color: "#64748b",
-                  cursor: "pointer",
-                }}
-              >
-                {showPassword ? (
-                  <VisibilityOffOutlined style={{ fontSize: "18px" }} />
-                ) : (
-                  <VisibilityOutlined style={{ fontSize: "18px" }} />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Role selector when registering */}
-          {isRegisterMode && (
-            <div style={{ marginBottom: "22px" }}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  color: "#cbd5e1",
-                  marginBottom: "6px",
-                }}
-              >
-                Assign Staff Role
-              </label>
-              <div style={{ position: "relative" }}>
-                <BadgeOutlined
-                  style={{
-                    position: "absolute",
-                    left: "14px",
-                    top: "12px",
-                    color: "#64748b",
-                    fontSize: "20px",
-                  }}
-                />
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "12px 14px 12px 42px",
-                    background: "rgba(15, 23, 42, 0.7)",
-                    border: "1px solid rgba(255, 255, 255, 0.15)",
-                    borderRadius: "10px",
-                    color: "#ffffff",
-                    fontSize: "14px",
-                    outline: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  <option value="Doctor" style={{ background: "#0f172a" }}>
-                    Doctor
-                  </option>
-                  <option value="Administrator" style={{ background: "#0f172a" }}>
-                    Administrator
-                  </option>
-                  <option value="Nurse" style={{ background: "#0f172a" }}>
-                    Medical Nurse
-                  </option>
-                  <option value="Auditor" style={{ background: "#0f172a" }}>
-                    Blockchain Auditor
-                  </option>
-                </select>
-              </div>
-            </div>
+              {success}
+            </Alert>
           )}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "13px 0",
-              borderRadius: "10px",
-              border: "none",
-              background: "linear-gradient(135deg, #0d9488 0%, #0284c7 100%)",
-              color: "#ffffff",
-              fontSize: "15px",
-              fontWeight: "700",
-              cursor: loading ? "wait" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              boxShadow: "0 4px 14px rgba(13, 148, 136, 0.4)",
-              transition: "all 0.2s ease",
-              opacity: loading ? 0.7 : 1,
-            }}
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
           >
-            {loading ? (
-              <span>Authenticating...</span>
-            ) : isRegisterMode ? (
-              <>
-                Register Account <ArrowForwardOutlined style={{ fontSize: "18px" }} />
-              </>
-            ) : (
-              <>
-                Access System Dashboard <ArrowForwardOutlined style={{ fontSize: "18px" }} />
-              </>
+            {mode === "register" && (
+              <TextField
+                fullWidth
+                label="Full Name"
+                value={fullName}
+                onChange={(event) =>
+                  setFullName(
+                    event.target.value
+                  )
+                }
+                margin="normal"
+                autoComplete="name"
+                InputProps={{
+                  sx: {
+                    color: "#f8fafc",
+                  },
+                }}
+              />
             )}
-          </button>
-        </form>
-      </div>
-    </div>
+
+            <TextField
+              fullWidth
+              label="Email Address"
+              value={email}
+              onChange={(event) =>
+                setEmail(event.target.value)
+              }
+              margin="normal"
+              type="email"
+              autoComplete="email"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailOutlined
+                      sx={{
+                        color: "#64748b",
+                      }}
+                    />
+                  </InputAdornment>
+                ),
+                sx: {
+                  color: "#f8fafc",
+                },
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Password"
+              value={password}
+              onChange={(event) =>
+                setPassword(
+                  event.target.value
+                )
+              }
+              margin="normal"
+              type={
+                showPassword
+                  ? "text"
+                  : "password"
+              }
+              autoComplete={
+                mode === "login"
+                  ? "current-password"
+                  : "new-password"
+              }
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockOutlined
+                      sx={{
+                        color: "#64748b",
+                      }}
+                    />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() =>
+                        setShowPassword(
+                          (value) => !value
+                        )
+                      }
+                      edge="end"
+                      sx={{
+                        color: "#64748b",
+                      }}
+                      type="button"
+                    >
+                      {showPassword ? (
+                        <VisibilityOff />
+                      ) : (
+                        <Visibility />
+                      )}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+                sx: {
+                  color: "#f8fafc",
+                },
+              }}
+            />
+
+            {mode === "register" && (
+              <TextField
+                fullWidth
+                select
+                label="Role"
+                value={role}
+                onChange={(event) =>
+                  setRole(event.target.value)
+                }
+                margin="normal"
+                SelectProps={{
+                  native: true,
+                }}
+                InputProps={{
+                  sx: {
+                    color: "#f8fafc",
+                  },
+                }}
+              >
+                <option value="doctor">
+                  Doctor
+                </option>
+
+                <option value="patient">
+                  Patient
+                </option>
+              </TextField>
+            )}
+
+            <Button
+              fullWidth
+              type="submit"
+              variant="contained"
+              disabled={loading}
+              endIcon={
+                loading ? (
+                  <CircularProgress
+                    size={20}
+                    color="inherit"
+                  />
+                ) : (
+                  <ArrowForward />
+                )
+              }
+              sx={{
+                mt: 3,
+                minHeight: 54,
+                borderRadius: 2,
+                fontSize: 17,
+                fontWeight: 800,
+                textTransform: "none",
+                background:
+                  "linear-gradient(135deg, #0d9488 0%, #0284c7 100%)",
+                boxShadow:
+                  "0 8px 24px rgba(14, 165, 233, 0.25)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #0f766e 0%, #0369a1 100%)",
+                },
+              }}
+            >
+              {mode === "login"
+                ? "Access System Dashboard"
+                : "Create Healthcare Account"}
+            </Button>
+          </Box>
+
+          <Typography
+            variant="caption"
+            sx={{
+              display: "block",
+              textAlign: "center",
+              color: "#64748b",
+              mt: 3,
+            }}
+          >
+            Secure authentication · Role-based access
+            control · Blockchain auditability
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
   );
 }
