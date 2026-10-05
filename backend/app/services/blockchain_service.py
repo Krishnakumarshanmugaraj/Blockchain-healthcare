@@ -811,6 +811,7 @@ class BlockchainService:
             )
 
         return {
+            "proof_exists": True,
             **self.get_proof_basic(
                 token_id
             ),
