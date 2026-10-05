@@ -1,4 +1,5 @@
 import { useState } from "react";
+import api from "../api/api";
 import {
   Alert,
   Box,
@@ -22,32 +23,12 @@ import {
 } from "@mui/icons-material";
 
 const NFT_ADDRESS =
-  "0xa17F3152F91BA76dbf806700E5ab53944f711CB7";
+  "0x2D71D17c48bCE432712B0D3397Db89797859bFe9";
 
 const SETTLEMENT_ADDRESS =
-  "0x53b399C76Dc2d0028B1D9a77a950009971a18785";
+  "0xB5a279fe7f93de19F9ADf31A835C2dFb50c25758";
 
-const DEMO_SETTLEMENT = {
-  agreementId: 1,
-  patientId: 2,
-  patient:
-    "0x5529523E82Ad177cd28E0000F8A9a7bf1c5399c3",
-  doctor:
-    "0x2438bC21A68066eB36Ab3557D17Cf0133Ce0D24C",
-  insurer:
-    "0x16837317aAC3a27c25d1733E540b8362Fa510AD5",
-  totalCoverage: 1.0,
-  amountAlreadyPaid: 0.25,
-  finalSettlementAmount: 0.75,
-  proofTokenId: 1,
-  status: "Completed",
-  proofVerified: true,
-  remainingAmount: 0,
-  settlementTransaction:
-    "e510ec7b3fe1d13f414c6f6ea7ded2ce77f918ab486b433e5615d3c93d6e39fa",
-  settlementHash:
-    "050d18facaa45aee29c413e9522f79d59234bed00eb86ea85d61d2d4298a02a0",
-};
+
 
 function shorten(value, start = 10, end = 8) {
   if (!value) {
@@ -102,13 +83,48 @@ export default function InsuranceSettlement() {
   const [settlement, setSettlement] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleLoadSettlement = () => {
+  const handleLoadSettlement = async () => {
     setLoading(true);
+    setSettlement(null);
 
-    window.setTimeout(() => {
-      setSettlement(DEMO_SETTLEMENT);
+    try {
+      const settlementResponse = await api.get(
+        "/blockchain/settlement/1"
+      );
+
+      const settlementData = settlementResponse.data;
+
+      const verificationResponse = await api.get(
+        `/blockchain/settlement/1/verify/${settlementData.proof_token_id}`
+      );
+
+      const verificationData = verificationResponse.data;
+
+      setSettlement({
+        agreementId: settlementData.agreement_id,
+        patientId: settlementData.patient_id,
+        patient: settlementData.patient,
+        doctor: settlementData.doctor,
+        insurer: settlementData.insurer,
+        totalCoverage: settlementData.total_coverage_eth,
+        amountAlreadyPaid: settlementData.amount_already_paid_eth,
+        finalSettlementAmount: settlementData.final_settlement_amount_eth,
+        proofTokenId: settlementData.proof_token_id,
+        status: settlementData.complete ? "Completed" : "Pending",
+        proofVerified: verificationData.valid,
+        remainingAmount: settlementData.remaining_amount_eth,
+        settlementTransaction:
+          settlementData.settlement_transaction_hash,
+        settlementHash:
+          verificationData.settlement_transaction_hash,
+        contract: settlementData.contract,
+      });
+    } catch (err) {
+      console.error("Failed to load settlement:", err);
+      setSettlement(null);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (

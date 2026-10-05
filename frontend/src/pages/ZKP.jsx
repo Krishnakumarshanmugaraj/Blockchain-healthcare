@@ -254,7 +254,7 @@ function ZKP() {
 
               <TextField
                 fullWidth
-                type="number"
+                type="password"
                 label="Private Secret"
                 value={privateSecret}
                 onChange={(event) =>
